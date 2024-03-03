@@ -31,48 +31,93 @@ async function run() {
 
     // database and collections ========================!
     const userCollection = client.db("LinkShareDB").collection("usersCollection");
+    const linksCollection = client.db("LinkShareDB").collection("linksCollection");
     // database and collections ========================!
 
 
     // Get Api ===========================>>>>>
-    app.get('/users',async(req,res)=>{
+    app.get('/users', async (req, res) => {
       const result = await userCollection.find({}).toArray();
       res.send(result);
     })
 
     // Post User Api =====================>>>>>
-    app.post('/users',async(req,res)=>{
+    app.post('/users', async (req, res) => {
       const data = req.body;
       const result = await userCollection.insertOne(data);
-      res.send(result);      
-    }) 
+      res.send(result);
+    })
 
     // Update User Role API ==============>>>>>
-    app.patch('/users',async(req,res)=>{
-      const {uid,status} = req.body;
-      const query = {_id : new ObjectId(uid)};
-      const updatedDoc ={
-        $set : {
-          role : status
+    app.patch('/users', async (req, res) => {
+      const { uid, status } = req.body;
+      const query = { _id: new ObjectId(uid) };
+      const updatedDoc = {
+        $set: {
+          role: status
         }
       }
-      const result = await userCollection.updateOne(query,updatedDoc);
+      const result = await userCollection.updateOne(query, updatedDoc);
       res.send(result);
     })
 
     // check Admin status API ============>>>>>
-    app.get('/admin',async(req,res)=>{
-      const {email} = req.query;
-      if(email){
-        const query = {email};
+    app.get('/admin', async (req, res) => {
+      const { email } = req.query;
+      if (email) {
+        const query = { email };
         const target = await userCollection.findOne(query);
-        if(target.role === "admin"){
+        if (target.role === "admin") {
           res.send(true)
-        }else{
+        } else {
           res.send(false)
         }
       }
     })
+
+    // get all Links API ================>>>>>>
+    app.get('/links', async (req, res) => {
+      const result = await linksCollection.find({}).toArray();
+      res.send(result);
+    })
+
+    // post new link API =================>>>>>
+    app.post('/links', async (req, res) => {
+      const data = req.body;
+      const result = await linksCollection.insertOne(data);
+      res.send(result);
+    })
+
+    // Delete link API ===================>>>>>
+    app.delete('/links/:sid',async(req,res)=>{
+      const sid = req.params.sid;
+      const query = {_id : new ObjectId(sid)}
+      const result = await linksCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    // get one link API =================>>>>>
+    app.get('/one/:sid',async(req,res)=>{
+      const sid = req.params.sid;
+      const query = {_id : new ObjectId(sid)};
+      const result = await linksCollection.findOne(query);
+      res.send(result);
+    })
+
+
+    app.patch('/edit',async(req,res)=>{
+      const data = req.body;
+      const query = {_id : new ObjectId(data?.sid)}
+      const updatedDoc = {
+        $set : {
+          text : data.text,
+          url : data.url,
+        }
+      }
+      const result = await linksCollection.updateOne(query,updatedDoc);
+      res.send(result);
+    })
+
 
 
 
@@ -97,10 +142,10 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req,res)=>{
-    res.send("Server is Running !")
+app.get('/', (req, res) => {
+  res.send("Server is Running !")
 })
 
-app.listen(port,()=>{
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 })
